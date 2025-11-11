@@ -1,0 +1,37 @@
+# Example of remote state configuration for cluster layer
+# This connects the cluster layer to the infrastructure layer
+
+terraform {
+  backend "s3" {
+    bucket = "your-terraform-state-bucket"
+    key    = "cluster/dev/terraform.tfstate"
+    region = "us-east-1"
+    dynamodb_table = "terraform-locks"
+  }
+}
+
+# Reference remote state from infrastructure layer
+data "terraform_remote_state" "infrastructure" {
+  backend = "s3"
+  config = {
+    bucket = "your-terraform-state-bucket"
+    key    = "infrastructure/dev/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
+# Access infrastructure outputs
+locals {
+  # VPC and network resources
+  vpc_id = data.terraform_remote_state.infrastructure.outputs.vpc_id
+  public_subnets = data.terraform_remote_state.infrastructure.outputs.public_subnets
+  private_subnets = data.terraform_remote_state.infrastructure.outputs.private_subnets
+  
+  # Security groups
+  alb_security_group = data.terraform_remote_state.infrastructure.outputs.alb_security_group
+  ecs_security_group = data.terraform_remote_state.infrastructure.outputs.ecs_security_group
+  
+  # IAM roles
+  ecs_task_execution_role = data.terraform_remote_state.infrastructure.outputs.ecs_task_execution_role
+  ecs_task_role = data.terraform_remote_state.infrastructure.outputs.ecs_task_role
+}

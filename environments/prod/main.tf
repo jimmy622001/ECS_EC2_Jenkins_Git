@@ -1,0 +1,161 @@
+# Production Environment Configuration
+
+# Network Module
+module "network" {
+  source = "../../modules/network"
+
+  project               = var.project
+  environment           = var.environment
+  aws_region            = var.aws_region
+  vpc_cidr              = var.vpc_cidr
+  public_subnet_cidrs   = var.public_subnet_cidrs
+  private_subnet_cidrs  = var.private_subnet_cidrs
+  database_subnet_cidrs = var.database_subnet_cidrs
+  availability_zones    = var.availability_zones
+  allowed_ssh_cidr      = var.allowed_ssh_cidr
+}
+
+# IAM Module
+module "iam" {
+  source = "../../modules/iam"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+}
+
+# ECS Module
+module "ecs" {
+  source = "../../modules/ecs"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  vpc_id             = module.network.vpc_id
+  private_subnets    = module.network.private_subnets
+  public_subnets     = module.network.public_subnets
+  alb_security_group = module.network.alb_security_group
+  ecs_security_group = module.network.ecs_security_group
+
+  ecs_task_execution_role = module.iam.ecs_task_execution_role
+  ecs_task_role           = module.iam.ecs_task_role
+
+  container_insights = var.container_insights
+  instance_type      = var.instance_type
+  ssh_key_name       = var.ssh_key_name
+  min_capacity       = var.min_capacity
+  max_capacity       = var.max_capacity
+  desired_task_count = var.desired_task_count
+  container_image    = var.container_image
+  container_port     = var.container_port
+  health_check_path  = var.health_check_path
+  task_cpu           = var.task_cpu
+  task_memory        = var.task_memory
+
+  domain_name         = var.domain_name
+  create_dummy_cert   = var.create_dummy_cert
+  acm_certificate_arn = var.acm_certificate_arn
+}
+
+# Database Module
+module "database" {
+  source = "../../modules/database"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  vpc_id            = module.network.vpc_id
+  database_subnets  = module.network.database_subnets
+  db_security_group = module.network.db_security_group
+
+  db_engine                   = var.db_engine
+  db_engine_version           = var.db_engine_version
+  db_instance_class           = var.db_instance_class
+  db_allocated_storage        = var.db_allocated_storage
+  db_max_allocated_storage    = var.db_max_allocated_storage
+  db_name                     = var.db_name
+  db_username                 = var.db_username
+  db_password                 = var.db_password
+  db_port                     = var.db_port
+  db_multi_az                 = var.db_multi_az
+  enable_performance_insights = var.enable_performance_insights
+  postgres_parameters         = var.postgres_parameters
+  mysql_parameters            = var.mysql_parameters
+}
+
+# CI/CD Module
+module "cicd" {
+  source = "../../modules/cicd"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  vpc_id                 = module.network.vpc_id
+  public_subnets         = module.network.public_subnets
+  jenkins_security_group = module.network.jenkins_security_group
+
+  jenkins_instance_profile = module.iam.jenkins_instance_profile
+  codedeploy_role          = module.iam.codedeploy_role
+
+  jenkins_instance_type = var.jenkins_instance_type
+  ssh_key_name          = var.ssh_key_name
+  github_repository     = var.github_repository
+  codedeploy_group_name = var.codedeploy_group_name
+
+  ecs_cluster_name            = module.ecs.ecs_cluster_name
+  ecs_service_name            = var.ecs_service_name
+  alb_listener_arn            = var.alb_listener_arn
+  alb_target_group_name_blue  = var.alb_target_group_name_blue
+  alb_target_group_name_green = var.alb_target_group_name_green
+}
+
+# Monitoring Module
+module "monitoring" {
+  source = "../../modules/monitoring"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  vpc_id             = module.network.vpc_id
+  private_subnets    = module.network.private_subnets
+  public_subnets     = module.network.public_subnets
+  ecs_security_group = module.network.ecs_security_group
+
+  ecs_cluster_arn  = module.ecs.ecs_cluster_arn
+  ecs_cluster_name = module.ecs.ecs_cluster_name
+  ecs_service_name = var.ecs_service_name
+  alb_name         = var.alb_name
+  db_instance_id   = module.database.db_instance_id
+
+  ecs_task_execution_role = module.iam.ecs_task_execution_role
+  ecs_task_role           = module.iam.ecs_task_role
+
+  create_grafana_dashboard = var.create_grafana_dashboard
+  create_prometheus        = var.create_prometheus
+  alerting_enabled         = var.alerting_enabled
+  enable_db_alarms         = var.db_instance_class != ""
+  grafana_password         = var.grafana_password
+}
+
+# Security Module
+module "security" {
+  source = "../../modules/security"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+
+  vpc_id  = module.network.vpc_id
+  alb_arn = module.ecs.alb_arn
+
+  rate_limit             = var.waf_rate_limit
+  blocked_countries      = var.waf_blocked_countries
+  enable_security_hub    = var.enable_security_hub
+  enable_guardduty       = var.enable_guardduty
+  enable_config          = var.enable_config
+  enable_waf_association = var.create_dummy_cert || var.acm_certificate_arn != ""
+}

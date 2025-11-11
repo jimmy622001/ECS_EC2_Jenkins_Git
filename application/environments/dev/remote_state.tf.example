@@ -1,0 +1,45 @@
+# Example of remote state configuration for application layer
+# This connects the application layer to both the infrastructure and cluster layers
+
+terraform {
+  backend "s3" {
+    bucket = "your-terraform-state-bucket"
+    key    = "application/dev/terraform.tfstate"
+    region = "us-east-1"
+    dynamodb_table = "terraform-locks"
+  }
+}
+
+# Reference remote state from infrastructure layer
+data "terraform_remote_state" "infrastructure" {
+  backend = "s3"
+  config = {
+    bucket = "your-terraform-state-bucket"
+    key    = "infrastructure/dev/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
+# Reference remote state from cluster layer
+data "terraform_remote_state" "cluster" {
+  backend = "s3"
+  config = {
+    bucket = "your-terraform-state-bucket"
+    key    = "cluster/dev/terraform.tfstate"
+    region = "us-east-1"
+  }
+}
+
+# Access outputs from both layers
+locals {
+  # From infrastructure layer
+  vpc_id = data.terraform_remote_state.infrastructure.outputs.vpc_id
+  private_subnets = data.terraform_remote_state.infrastructure.outputs.private_subnets
+  database_subnets = data.terraform_remote_state.infrastructure.outputs.database_subnets
+  db_security_group = data.terraform_remote_state.infrastructure.outputs.db_security_group
+  
+  # From cluster layer
+  ecs_cluster_name = data.terraform_remote_state.cluster.outputs.ecs_cluster_name
+  ecs_cluster_arn = data.terraform_remote_state.cluster.outputs.ecs_cluster_arn
+  alb_listener_arn = data.terraform_remote_state.cluster.outputs.alb_listener_arn
+}

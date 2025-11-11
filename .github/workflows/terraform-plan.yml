@@ -1,0 +1,70 @@
+name: "Terraform Plan"
+
+on:
+  pull_request:
+    branches:
+      - main
+      - dev
+
+jobs:
+  terraform-plan:
+    name: "Terraform Plan"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment: ['dev', 'prod', 'dr-pilot-light']
+        exclude:
+          # Only plan for the relevant environment based on branch
+          - environment: prod
+            branch: dev
+          - environment: dr-pilot-light
+            branch: dev
+      fail-fast: false
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.0.0
+
+      - name: Terraform Format
+        id: fmt
+        run: terraform fmt -check -recursive
+        continue-on-error: true
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd environments/${{ matrix.environment }}
+          terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: |
+          cd environments/${{ matrix.environment }}
+          terraform validate
+
+      - name: TFLint
+        uses: terraform-linters/tflint-action@v3
+        with:
+          working_directory: environments/${{ matrix.environment }}
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd environments/${{ matrix.environment }}
+          terraform plan -no-color -out=tfplan
+        continue-on-error: true
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1

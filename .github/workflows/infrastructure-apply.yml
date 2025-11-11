@@ -1,0 +1,59 @@
+name: "Infrastructure Layer Apply"
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+    paths:
+      - 'infrastructure/**'
+      - '.github/workflows/infrastructure-*.yml'
+
+jobs:
+  terraform-apply:
+    name: "Infrastructure Apply"
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        environment:
+          - ${{ github.ref == 'refs/heads/main' && 'prod' || 'dev' }}
+      fail-fast: false
+
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.0.0
+
+      - name: Terraform Init
+        id: init
+        run: |
+          cd infrastructure/environments/${{ matrix.environment }}
+          terraform init
+
+      - name: Terraform Validate
+        id: validate
+        run: |
+          cd infrastructure/environments/${{ matrix.environment }}
+          terraform validate
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          cd infrastructure/environments/${{ matrix.environment }}
+          terraform plan -no-color -out=tfplan
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          cd infrastructure/environments/${{ matrix.environment }}
+          terraform apply -auto-approve tfplan
