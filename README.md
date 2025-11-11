@@ -17,6 +17,8 @@ The infrastructure is designed with a modular approach allowing for independent 
 - Separate CI/CD processes for infrastructure and applications
 - Environment-specific configurations (prod, dev, DR)
 - Well-organized outputs in dedicated output files for each module
+- Separate infrastructure environments with proper CIDR block segmentation
+- Enhanced security with environment isolation
 
 ## Module Structure
 
@@ -101,11 +103,13 @@ The project supports multiple environments with specialized configurations:
 - Optimized for cost efficiency with spot instances
 - Scaled-down resources for development and testing
 - Full feature parity with production for accurate testing
+- Dedicated VPC with its own DNS configuration
 
 ### Production Environment
 - Highly available configuration using on-demand instances
 - Enhanced scaling parameters for production workloads
 - Stricter security controls and monitoring
+- Isolated VPC with enterprise-grade security controls
 
 ### DR Pilot Light Environment
 - Minimal running infrastructure in a secondary AWS region
