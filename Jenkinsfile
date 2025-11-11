@@ -141,23 +141,188 @@ pipeline {
             }
         }
         
-        stage('Security Scan') {
+        stage('Linting') {
             steps {
-                // OWASP Dependency check for vulnerability scanning
-                sh 'echo "Running security scan"'
+                sh 'echo "Running code linting"'
+                dir('app') {
+                    sh '''
+                        # Example for JavaScript/Node.js application
+                        if [ -f package.json ]; then
+                            echo "Running ESLint"
+                            npm install eslint eslint-plugin-security --no-save
+                            npx eslint . --ext .js,.jsx,.ts,.tsx --config .eslintrc.js || {
+                                echo "ESLint found issues. Creating report..."
+                                mkdir -p ../lint-reports
+                                npx eslint . --ext .js,.jsx,.ts,.tsx --format junit --output-file ../lint-reports/eslint-report.xml
+                                exit 0
+                            }
+                        # Example for Python application
+                        elif [ -f requirements.txt ]; then
+                            echo "Running pylint"
+                            pip install pylint pylint-security
+                            mkdir -p ../lint-reports
+                            pylint --recursive=y . --output-format=parseable --reports=y > ../lint-reports/pylint-report.txt || echo "Pylint issues found but continuing"
+                        # Example for Java application
+                        elif [ -f pom.xml ]; then
+                            echo "Running Checkstyle"
+                            mvn checkstyle:check -Dcheckstyle.output.format=xml -Dcheckstyle.output.file=../lint-reports/checkstyle-report.xml || echo "Checkstyle issues found but continuing"
+                        # Example for Terraform
+                        else
+                            echo "Running TFLint on terraform files"
+                            mkdir -p ../lint-reports
+                            curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash
+                            find .. -name "*.tf" -type f -exec dirname {} \; | sort -u | while read dir; do
+                                echo "Running TFLint in $dir"
+                                cd $dir && tflint --format junit > $(dirname $(pwd))/lint-reports/tflint-$(basename $(pwd))-report.xml || true
+                            done
+                        fi
+                    '''
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'lint-reports/**', allowEmptyArchive: true
+                    junit allowEmptyResults: true, testResults: 'lint-reports/**/*.xml'
+                }
+            }
+        }
+        
+        stage('Security Scan') {
+            parallel {
+                stage('OWASP Dependency Check') {
+                    steps {
+                        sh 'echo "Running OWASP Dependency Check"'
+                        // Download and run OWASP dependency check
+                        sh '''
+                            mkdir -p security-reports
+                            # Use the latest version of dependency-check
+                            wget -q https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
+                            unzip -q dependency-check-8.4.0-release.zip
                 
-                // Sample security scan commands
-                sh '''
-                    # Example for OWASP dependency check
-                    # wget https://github.com/jeremylong/DependencyCheck/releases/download/v7.1.0/dependency-check-7.1.0-release.zip
-                    # unzip -q dependency-check-7.1.0-release.zip
-                    # ./dependency-check/bin/dependency-check.sh --scan app --format "ALL" --out security-reports
-                '''
+                            # Run dependency check on both app code and infrastructure code
+                            ./dependency-check/bin/dependency-check.sh \
+                                --scan app \
+                                --scan modules \
+                                --project "${PROJECT_NAME}-${ENVIRONMENT}" \
+                                --format "HTML" --format "XML" --format "JSON" --format "CSV" \
+                                --out security-reports \
+                                --failOnCVSS 7
                 
-                // SonarQube scan for code quality and security issues
-                withSonarQubeEnv('SonarQube') {
-                    sh 'echo "Running SonarQube analysis"'
-                    // Example: sh 'sonar-scanner -Dsonar.projectKey=ecs-app -Dsonar.sources=app'
+                            echo "OWASP Dependency Check complete. Reports available in security-reports directory."
+                        '''
+                    }
+                    post {
+                        always {
+                            publishHTML([allowMissing: true, alwaysLinkToLastBuild: true, keepAll: true, 
+                                reportDir: 'security-reports', 
+                                reportFiles: 'dependency-check-report.html', 
+                                reportName: 'OWASP Dependency Check Report', 
+                                reportTitles: ''])
+                        }
+                    }
+                }
+        
+                stage('Checkov') {
+                    steps {
+                        sh 'echo "Running Checkov for Infrastructure as Code security scanning"'
+                        sh '''
+                            # Install/Upgrade Checkov to latest version
+                            pip install checkov --upgrade
+                
+                            # Create reports directory if it doesn't exist
+                            mkdir -p security-reports
+                
+                            # Run Checkov on Terraform files with multiple output formats
+                            checkov -d . \
+                                --output cli \
+                                --output junitxml \
+                                --output json \
+                                --output-file-path console,security-reports/checkov-report.xml,security-reports/checkov-report.json \
+                                --soft-fail \
+                                --framework terraform
+                
+                            # Run specific policy scans for AWS resources
+                            echo "Running focused scans on AWS resources..."
+                            checkov -d . \
+                                --output cli \
+                                --framework cloudformation \
+                                --check CKV_AWS_* \
+                                --soft-fail
+                
+                            echo "Checkov scanning complete. Reports available in security-reports directory."
+                        '''
+                    }
+                    post {
+                        always {
+                            junit allowEmptyResults: true, testResults: 'security-reports/checkov-report.xml'
+                        }
+                    }
+                }
+        
+                stage('SonarQube Analysis') {
+                    steps {
+                        withSonarQubeEnv('SonarQube') {
+                            sh 'echo "Running SonarQube analysis"'
+                            sh '''
+                                # Install sonar-scanner with latest version
+                                if [ ! -d "sonar-scanner" ]; then
+                                    wget -q https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-5.0.1.3006-linux.zip
+                                    unzip -q sonar-scanner-cli-5.0.1.3006-linux.zip
+                                    mv sonar-scanner-5.0.1.3006-linux sonar-scanner
+                                fi
+                
+                                # Configure SonarQube project properties
+                                cat > sonar-project.properties << EOL
+                                # Project identification
+                                sonar.projectKey=${PROJECT_NAME}-${ENVIRONMENT}
+                                sonar.projectName=${PROJECT_NAME} ${ENVIRONMENT}
+                                sonar.projectVersion=1.0.${BUILD_NUMBER}
+                
+                                # Source code and test directories
+                                sonar.sources=app,modules,environments
+                                sonar.tests=app/tests
+                
+                                # Exclude specific directories
+                                sonar.exclusions=**/*.md,**/*.txt,**/node_modules/**,**/.terraform/**
+                
+                                # Configure test reports
+                                sonar.junit.reportPaths=app/target/surefire-reports,**/test-results/**/*.xml
+                                sonar.javascript.lcov.reportPaths=app/coverage/lcov.info
+                                sonar.coverage.jacoco.xmlReportPaths=app/target/site/jacoco/jacoco.xml
+                
+                                # Include security reports
+                                sonar.dependencyCheck.jsonReportPath=security-reports/dependency-check-report.json
+                                sonar.dependencyCheck.htmlReportPath=security-reports/dependency-check-report.html
+                
+                                # Terraform analysis
+                                sonar.terraform.file.suffixes=tf
+                                sonar.terraform.activate=true
+                
+                                # Additional properties
+                                sonar.sourceEncoding=UTF-8
+                                sonar.verbose=true
+                                EOL
+                
+                                # Run SonarQube analysis
+                                ./sonar-scanner/bin/sonar-scanner
+                
+                                echo "SonarQube analysis complete."
+                            '''
+                        }
+                    }
+                    post {
+                        always {
+                            echo "SonarQube Quality Gate check"
+                            timeout(time: 2, unit: 'MINUTES') {
+                                waitForQualityGate abortPipeline: false
+                            }
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'security-reports/**', allowEmptyArchive: true
                 }
             }
         }
@@ -314,17 +479,21 @@ pipeline {
         always {
             // Archive test results
             junit allowEmptyResults: true, testResults: '**/test-results/*.xml'
-            
+    
+            // Archive security reports
+            archiveArtifacts artifacts: 'security-reports/**', allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: 'security-reports/**/*.xml'
+    
             // Clean up workspace
             cleanWs()
         }
-        
+    
         success {
             echo "Pipeline completed successfully!"
             // Send notifications if needed
             // slackSend channel: '#deployments', color: 'good', message: "Deployment to ${params.ENVIRONMENT} completed successfully"
         }
-        
+    
         failure {
             echo "Pipeline failed!"
             // Send notifications if needed
