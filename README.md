@@ -141,3 +141,6 @@ For more detailed documentation, see:
 - [Layered Infrastructure Guide](docs/LAYERED_INFRASTRUCTURE.md)
 - [Migration Guide](docs/MIGRATION_GUIDE.md)
 - [Usage Instructions](USAGE.md)
+
+Architecture diagram:
+![img_1.png](docs/img_1.png)
