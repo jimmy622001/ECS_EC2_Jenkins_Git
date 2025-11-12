@@ -63,9 +63,7 @@ resource "aws_subnet" "database" {
   }
 }
 
-# ElastiCache Subnets - Commented out until ElastiCache is needed
-# Uncomment when enabling ElastiCache resources
-/*
+# ElastiCache Subnets
 resource "aws_subnet" "cache" {
   count             = length(var.cache_subnet_cidrs)
   vpc_id            = aws_vpc.main.id
@@ -80,7 +78,6 @@ resource "aws_subnet" "cache" {
     Type        = "Cache"
   }
 }
-*/
 
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
@@ -174,9 +171,7 @@ resource "aws_route_table" "database" {
   }
 }
 
-# Route Table for ElastiCache subnets - Commented out until ElastiCache is needed
-# Uncomment when enabling ElastiCache resources
-/*
+# Route Table for ElastiCache subnets
 resource "aws_route_table" "cache" {
   count  = length(var.cache_subnet_cidrs)
   vpc_id = aws_vpc.main.id
@@ -193,7 +188,6 @@ resource "aws_route_table" "cache" {
     Terraform   = "true"
   }
 }
-*/
 
 # Route Table Associations
 resource "aws_route_table_association" "public" {
@@ -214,15 +208,12 @@ resource "aws_route_table_association" "database" {
   route_table_id = aws_route_table.database[count.index % length(aws_route_table.database)].id
 }
 
-# Route Table Association for ElastiCache subnets - Commented out until ElastiCache is needed
-# Uncomment when enabling ElastiCache resources
-/*
+# Route Table Association for ElastiCache subnets
 resource "aws_route_table_association" "cache" {
   count          = length(var.cache_subnet_cidrs)
   subnet_id      = aws_subnet.cache[count.index].id
   route_table_id = aws_route_table.cache[count.index % length(aws_route_table.cache)].id
 }
-*/
 
 # Security Groups
 resource "aws_security_group" "alb" {
@@ -347,10 +338,7 @@ resource "aws_security_group" "jenkins" {
   }
 }
 
-# ElastiCache Security Group - Commented out until ElastiCache is needed
-# Uncomment when enabling ElastiCache resources
-
-/*
+# ElastiCache Security Group
 resource "aws_security_group" "cache" {
   name        = "${var.project}-${var.environment}-cache-sg"
   description = "Security group for ElastiCache"
@@ -377,4 +365,3 @@ resource "aws_security_group" "cache" {
     Terraform   = "true"
   }
 }
-*/

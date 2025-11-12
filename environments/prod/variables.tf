@@ -35,6 +35,11 @@ variable "database_subnet_cidrs" {
   type        = list(string)
 }
 
+variable "cache_subnet_cidrs" {
+  description = "CIDR blocks for ElastiCache subnets"
+  type        = list(string)
+}
+
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
@@ -396,4 +401,23 @@ variable "alb_target_group_name_green" {
 variable "db_instance_id" {
   description = "Existing RDS instance ID (when deploy_database = false)"
   type        = string
+}
+
+# ElastiCache variables
+variable "cache_node_type" {
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.m5.large" # Production should use larger instances
+}
+
+variable "cache_nodes" {
+  description = "Number of Redis cache nodes"
+  type        = number
+  default     = 3 # Using 3 nodes for high availability across 3 AZs
+}
+
+variable "cache_security_group" {
+  description = "Existing ElastiCache security group ID (when deploy_network = false)"
+  type        = string
+  default     = ""
 }

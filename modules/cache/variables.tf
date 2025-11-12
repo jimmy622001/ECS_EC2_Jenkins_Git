@@ -27,5 +27,5 @@ variable "cache_node_type" {
 variable "cache_nodes" {
   description = "Number of cache nodes"
   type        = number
-  default     = 1 # Consider increasing for production
+  default     = 3 # One node for each AZ for maximum availability
 }
