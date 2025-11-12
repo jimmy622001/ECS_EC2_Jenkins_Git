@@ -397,3 +397,26 @@ variable "db_instance_id" {
   description = "Existing RDS instance ID (when deploy_database = false)"
   type        = string
 }
+
+# ElastiCache variables - commented out until ElastiCache is enabled
+# Uncomment these when enabling the ElastiCache module
+
+/*
+variable "cache_node_type" {
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t3.micro" # For development - use cache.m5.large or higher for production
+}
+
+variable "cache_nodes" {
+  description = "Number of Redis cache nodes"
+  type        = number
+  default     = 1
+}
+
+variable "cache_security_group" {
+  description = "Existing ElastiCache security group ID (when deploy_network = false)"
+  type        = string
+  default     = ""
+}
+*/

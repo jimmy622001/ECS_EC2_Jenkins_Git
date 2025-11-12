@@ -166,7 +166,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 
 resource "aws_secretsmanager_secret_version" "db_credentials" {
   secret_id = aws_secretsmanager_secret.db_credentials.id
-  
+
   secret_string = jsonencode({
     username = var.db_username
     password = var.db_password == "" ? random_password.db_password[0].result : var.db_password
@@ -177,3 +177,96 @@ resource "aws_secretsmanager_secret_version" "db_credentials" {
     url      = "${var.db_engine}://${var.db_username}:${var.db_password == "" ? random_password.db_password[0].result : var.db_password}@${aws_db_instance.main.address}:${aws_db_instance.main.port}/${var.db_name}"
   })
 }
+
+# RDS Proxy Configuration
+# Commented out to avoid extra costs during development
+# Uncomment when preparing for production deployment or for connection pooling needs
+
+/*
+# IAM Role for RDS Proxy
+resource "aws_iam_role" "proxy_role" {
+  name = "${var.project}-${var.environment}-proxy-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Principal = {
+          Service = "rds.amazonaws.com"
+        }
+      }
+    ]
+  })
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-proxy-role"
+    Environment = var.environment
+    Project     = var.project
+    Terraform   = "true"
+  }
+}
+
+# IAM Policy for RDS Proxy to access Secrets Manager
+resource "aws_iam_role_policy" "proxy_policy" {
+  name = "${var.project}-${var.environment}-proxy-policy"
+  role = aws_iam_role.proxy_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ]
+        Resource = [aws_secretsmanager_secret.db_credentials.arn]
+      }
+    ]
+  })
+}
+
+# RDS Proxy
+resource "aws_db_proxy" "main" {
+  name                   = "${var.project}-${var.environment}-db-proxy"
+  engine_family          = var.db_engine == "postgres" ? "POSTGRESQL" : "MYSQL"
+  idle_client_timeout    = 1800
+  require_tls            = true
+  role_arn               = aws_iam_role.proxy_role.arn
+  vpc_subnet_ids         = var.database_subnets
+  vpc_security_group_ids = [var.db_security_group]
+
+  auth {
+    auth_scheme = "SECRETS"
+    iam_auth    = "DISABLED"
+    secret_arn  = aws_secretsmanager_secret.db_credentials.arn
+  }
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-db-proxy"
+    Environment = var.environment
+    Project     = var.project
+    Terraform   = "true"
+  }
+}
+
+# RDS Proxy Default Target Group
+resource "aws_db_proxy_default_target_group" "main" {
+  db_proxy_name = aws_db_proxy.main.name
+
+  connection_pool_config {
+    connection_borrow_timeout    = 120
+    max_connections_percent      = 100
+    max_idle_connections_percent = 50
+    session_pinning_filters      = []
+  }
+}
+
+# RDS Proxy Target
+resource "aws_db_proxy_target" "main" {
+  db_proxy_name          = aws_db_proxy.main.name
+  target_group_name      = aws_db_proxy_default_target_group.main.name
+  db_instance_identifier = aws_db_instance.main.id
+}
+*/
