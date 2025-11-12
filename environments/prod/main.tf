@@ -161,8 +161,9 @@ module "security" {
   enable_waf_association = var.create_dummy_cert || var.acm_certificate_arn != ""
 }
 
-# ElastiCache Module
+# ElastiCache Module - conditionally deployed
 module "cache" {
+  count  = var.enable_elasticache ? 1 : 0
   source = "../../modules/cache"
 
   project     = var.project

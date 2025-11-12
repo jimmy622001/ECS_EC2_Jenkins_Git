@@ -71,8 +71,9 @@ module "database" {
   mysql_parameters            = var.mysql_parameters
 }
 
-# ElastiCache Module
+# ElastiCache Module - conditionally deployed
 module "cache" {
+  count  = var.enable_elasticache ? 1 : 0
   source = "../../modules/cache"
 
   project     = var.project
