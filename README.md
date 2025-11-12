@@ -143,4 +143,6 @@ For more detailed documentation, see:
 - [Usage Instructions](USAGE.md)
 
 Architecture diagram:
-![img_1.png](docs/img_1.png)
+Primary: ![Primary.png](docs/Primary.png)
+Dr: ![DR.png](docs/DR.png)
+
