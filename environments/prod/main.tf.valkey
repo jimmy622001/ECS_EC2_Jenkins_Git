@@ -161,3 +161,27 @@ module "security" {
   enable_waf_association = var.create_dummy_cert || var.acm_certificate_arn != ""
 }
 
+# Valkey Module - uses the same configuration variables as ElastiCache
+module "valkey" {
+  count  = var.enable_elasticache ? 1 : 0
+  source = "../../modules/valkey"
+
+  project     = var.project
+  environment = var.environment
+  aws_region  = var.aws_region
+  
+  vpc_id             = module.network.vpc_id
+  private_subnets    = module.network.private_subnets
+  app_security_group = module.network.ecs_security_group
+  
+  ecs_cluster_id         = module.ecs.ecs_cluster_id
+  ecs_task_execution_role = module.iam.ecs_task_execution_role
+  ecs_task_role           = module.iam.ecs_task_role
+  
+  # Use the same configuration variables as ElastiCache
+  cache_node_type = var.cache_node_type
+  cache_nodes     = var.cache_nodes
+  
+  # Optional advanced configuration
+  enable_persistent_storage = true  # Enable EFS for data persistence
+}
