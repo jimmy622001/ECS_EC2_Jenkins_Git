@@ -13,6 +13,73 @@ variable "aws_region" {
   type        = string
 }
 
+# Cross-region replication variables
+variable "enable_cross_region_replica" {
+  description = "Enable cross-region automated backup replication"
+  type        = bool
+  default     = false
+}
+
+variable "create_dr_read_replica" {
+  description = "Create a read replica in the DR region"
+  type        = bool
+  default     = false
+}
+
+variable "dr_replica_instance_class" {
+  description = "Instance class for DR read replica"
+  type        = string
+  default     = "db.t3.medium"
+}
+
+variable "replica_backup_retention_period" {
+  description = "Number of days to retain automated backups for the replica"
+  type        = number
+  default     = 7
+}
+
+variable "replica_kms_key_id" {
+  description = "The ARN for the KMS encryption key for replica backups"
+  type        = string
+  default     = null
+}
+
+variable "replication_sns_topic_arn" {
+  description = "ARN of SNS topic for replication event notifications"
+  type        = string
+  default     = ""
+}
+
+variable "dr_region" {
+  description = "AWS region for DR environment"
+  type        = string
+  default     = "eu-west-1"
+}
+
+variable "enable_replication" {
+  description = "Enable database replication"
+  type        = bool
+  default     = false
+}
+
+variable "is_primary" {
+  description = "Whether this is the primary DB instance for replication"
+  type        = bool
+  default     = true
+}
+
+variable "primary_db_instance_id" {
+  description = "ID of the primary DB instance for replication"
+  type        = string
+  default     = ""
+}
+
+variable "availability_zones" {
+  description = "List of availability zones"
+  type        = list(string)
+  default     = []
+}
+
 # Network variables
 variable "vpc_id" {
   description = "ID of the VPC"
