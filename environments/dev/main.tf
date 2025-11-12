@@ -84,6 +84,7 @@ module "database" {
   enable_performance_insights = var.enable_performance_insights
   postgres_parameters         = var.postgres_parameters
   mysql_parameters            = var.mysql_parameters
+  availability_zones          = var.availability_zones
 }
 
 # CI/CD Module

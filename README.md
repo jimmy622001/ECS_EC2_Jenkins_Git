@@ -11,6 +11,13 @@ This Terraform project deploys a complete AWS infrastructure including:
 - Prometheus and Grafana monitoring solution
 - Automated patching and AMI management
 
+## Infrastructure Overview
+
+- **Primary Region**: Main infrastructure with ECS cluster running on EC2 instances
+- **DR Region**: Automated disaster recovery environment with a pilot light architecture
+- **CI/CD**: Jenkins for continuous integration and delivery
+- **Source Control**: Centralized Git repository
+
 ## Project Architecture
 
 The infrastructure is designed with a modular approach allowing for independent deployment of components. This enables:
@@ -125,6 +132,19 @@ The project supports multiple environments with specialized configurations:
 - Uses spot instances for cost efficiency during normal operations
 - Auto scaling capabilities to rapidly expand during failover events
 - Consistent subnet and security configuration with production environment
+
+## Disaster Recovery Strategy
+
+This project implements a fully automated DR strategy with the following features:
+
+- **Pilot Light Architecture**: Maintains minimal infrastructure in a secondary region to reduce costs
+- **Route 53 Automated Failover**: Automatically detects primary region failure and redirects traffic to DR
+- **Auto-Scaling DR Environment**: DR environment automatically scales from pilot light to full capacity during failover
+- **Instance Type Transition**: Automatically switches from cost-effective spot instances to reliable on-demand instances during failover
+- **Continuous Database Replication**: Ensures data consistency between primary and DR regions
+- **Scheduled Monthly Testing**: Automated DR testing every Sunday after midnight during off-peak hours
+
+For detailed information about the DR architecture and failover process, see [DR-README.md](docs/DR-README.md).
 
 ## Secrets Management
 
