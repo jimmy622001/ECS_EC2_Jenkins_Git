@@ -159,3 +159,23 @@ module "security" {
   enable_config        = var.enable_config
   enable_waf_association = var.create_dummy_cert || var.acm_certificate_arn != ""
 }
+
+# ElastiCache Module - Commented out for future use
+# Uncomment when caching is needed for the application
+# Also uncomment the related security group in the network module
+
+/*
+module "cache" {
+  source = "../../modules/cache"
+
+  project     = var.project
+  environment = var.environment
+
+  private_subnets     = module.network.private_subnets
+  cache_security_group = module.network.cache_security_group
+
+  # Configure these in variables.tf
+  cache_node_type     = var.cache_node_type
+  cache_nodes         = var.cache_nodes
+}
+*/

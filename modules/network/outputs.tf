@@ -44,3 +44,13 @@ output "jenkins_security_group" {
   description = "ID of Jenkins security group"
   value       = aws_security_group.jenkins.id
 }
+
+# ElastiCache security group output - commented out until ElastiCache is enabled
+# Uncomment when enabling ElastiCache resources
+
+/*
+output "cache_security_group" {
+  description = "ID of ElastiCache security group"
+  value       = aws_security_group.cache.id
+}
+*/
