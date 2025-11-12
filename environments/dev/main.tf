@@ -13,8 +13,7 @@ module "network" {
   database_subnet_cidrs = var.database_subnet_cidrs
   availability_zones    = var.availability_zones
   allowed_ssh_cidr      = var.allowed_ssh_cidr
-  # Uncomment the line below when enabling ElastiCache
-  # cache_subnet_cidrs    = var.cache_subnet_cidrs
+  cache_subnet_cidrs    = var.cache_subnet_cidrs
 }
 
 # IAM Module
@@ -154,30 +153,24 @@ module "security" {
   vpc_id  = module.network.vpc_id
   alb_arn = module.ecs.alb_arn
 
-  rate_limit           = var.waf_rate_limit
-  blocked_countries    = var.waf_blocked_countries
-  enable_security_hub  = var.enable_security_hub
-  enable_guardduty     = var.enable_guardduty
-  enable_config        = var.enable_config
+  rate_limit             = var.waf_rate_limit
+  blocked_countries      = var.waf_blocked_countries
+  enable_security_hub    = var.enable_security_hub
+  enable_guardduty       = var.enable_guardduty
+  enable_config          = var.enable_config
   enable_waf_association = var.create_dummy_cert || var.acm_certificate_arn != ""
 }
 
-# ElastiCache Module - Commented out for future use
-# Uncomment when caching is needed for the application
-# Also uncomment the related security group in the network module
-
-/*
+# ElastiCache Module
 module "cache" {
   source = "../../modules/cache"
 
   project     = var.project
   environment = var.environment
 
-  cache_subnets       = module.network.cache_subnets
+  cache_subnets        = module.network.cache_subnets
   cache_security_group = module.network.cache_security_group
 
-  # Configure these in variables.tf
-  cache_node_type     = var.cache_node_type
-  cache_nodes         = var.cache_nodes
+  cache_node_type = var.cache_node_type
+  cache_nodes     = var.cache_nodes
 }
-*/

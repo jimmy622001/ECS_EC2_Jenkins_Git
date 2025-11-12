@@ -35,15 +35,11 @@ variable "database_subnet_cidrs" {
   type        = list(string)
 }
 
-# ElastiCache subnet CIDRs - commented out until ElastiCache is enabled
-# Uncomment when enabling the ElastiCache module
-/*
+# ElastiCache subnet CIDRs
 variable "cache_subnet_cidrs" {
   description = "CIDR blocks for ElastiCache subnets"
   type        = list(string)
-  default     = ["10.0.16.0/24", "10.0.17.0/24"] # Example CIDRs - adjust as needed
 }
-*/
 
 variable "availability_zones" {
   description = "List of availability zones"
@@ -408,10 +404,7 @@ variable "db_instance_id" {
   type        = string
 }
 
-# ElastiCache variables - commented out until ElastiCache is enabled
-# Uncomment these when enabling the ElastiCache module
-
-/*
+# ElastiCache variables
 variable "cache_node_type" {
   description = "ElastiCache node type"
   type        = string
@@ -421,7 +414,7 @@ variable "cache_node_type" {
 variable "cache_nodes" {
   description = "Number of Redis cache nodes"
   type        = number
-  default     = 1
+  default     = 3 # Using 3 nodes for high availability across 3 AZs
 }
 
 variable "cache_security_group" {
@@ -429,4 +422,3 @@ variable "cache_security_group" {
   type        = string
   default     = ""
 }
-*/

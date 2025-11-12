@@ -1,24 +1,24 @@
 # ElastiCache module for Redis caching
-# This module is currently commented out to avoid unnecessary costs during development
-# Uncomment when preparing for production deployment or when application caching needs arise
 
-/* 
 resource "aws_elasticache_subnet_group" "main" {
   name       = "${var.project}-${var.environment}-cache-subnet-group"
   subnet_ids = var.cache_subnets
 }
 
-resource "aws_elasticache_cluster" "redis" {
-  cluster_id           = "${var.project}-${var.environment}-redis"
-  engine               = "redis"
-  node_type            = var.cache_node_type
-  num_cache_nodes      = var.cache_nodes
-  parameter_group_name = "default.redis6.x"
-  engine_version       = "6.2"
-  port                 = 6379
-  subnet_group_name    = aws_elasticache_subnet_group.main.name
-  security_group_ids   = [var.cache_security_group]
-  
+# Use a replication group instead of a cluster for multi-AZ support
+resource "aws_elasticache_replication_group" "redis" {
+  replication_group_id       = "${var.project}-${var.environment}-redis"
+  description               = "${var.project}-${var.environment} Redis replication group"
+  node_type                 = var.cache_node_type
+  num_cache_clusters        = var.cache_nodes
+  parameter_group_name      = "default.redis6.x"
+  engine_version            = "6.2"
+  port                      = 6379
+  subnet_group_name         = aws_elasticache_subnet_group.main.name
+  security_group_ids        = [var.cache_security_group]
+  automatic_failover_enabled = var.cache_nodes > 1 ? true : false
+  multi_az_enabled          = var.cache_nodes > 1 ? true : false
+
   tags = {
     Name        = "${var.project}-${var.environment}-redis"
     Environment = var.environment
@@ -26,17 +26,18 @@ resource "aws_elasticache_cluster" "redis" {
     Terraform   = "true"
   }
 }
-*/
 
-# Outputs will be uncommented when the resources are enabled
-/*
 output "redis_endpoint" {
-  description = "Redis cluster endpoint"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].address
+  description = "Redis primary endpoint"
+  value       = aws_elasticache_replication_group.redis.primary_endpoint_address
+}
+
+output "redis_reader_endpoint" {
+  description = "Redis reader endpoint"
+  value       = aws_elasticache_replication_group.redis.reader_endpoint_address
 }
 
 output "redis_port" {
-  description = "Redis cluster port"
-  value       = aws_elasticache_cluster.redis.cache_nodes[0].port
+  description = "Redis port"
+  value       = aws_elasticache_replication_group.redis.port
 }
-*/

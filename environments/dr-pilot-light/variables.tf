@@ -35,6 +35,11 @@ variable "database_subnet_cidrs" {
   type        = list(string)
 }
 
+variable "cache_subnet_cidrs" {
+  description = "CIDR blocks for ElastiCache subnets"
+  type        = list(string)
+}
+
 variable "availability_zones" {
   description = "List of availability zones"
   type        = list(string)
@@ -172,6 +177,25 @@ variable "database_subnets" {
 
 variable "db_security_group" {
   description = "Existing database security group ID (when deploy_network = false)"
+  type        = string
+  default     = ""
+}
+
+# ElastiCache variables
+variable "cache_node_type" {
+  description = "ElastiCache node type"
+  type        = string
+  default     = "cache.t3.small" # Smaller instance for DR site to save costs
+}
+
+variable "cache_nodes" {
+  description = "Number of Redis cache nodes"
+  type        = number
+  default     = 3 # Using 3 nodes for high availability across 3 AZs
+}
+
+variable "cache_security_group" {
+  description = "Existing ElastiCache security group ID (when deploy_network = false)"
   type        = string
   default     = ""
 }

@@ -11,6 +11,7 @@ module "network" {
   public_subnet_cidrs   = var.public_subnet_cidrs
   private_subnet_cidrs  = var.private_subnet_cidrs
   database_subnet_cidrs = var.database_subnet_cidrs
+  cache_subnet_cidrs    = var.cache_subnet_cidrs
   availability_zones    = var.availability_zones
   allowed_ssh_cidr      = var.allowed_ssh_cidr
 }
@@ -68,4 +69,18 @@ module "database" {
   enable_performance_insights = var.enable_performance_insights
   postgres_parameters         = var.postgres_parameters
   mysql_parameters            = var.mysql_parameters
+}
+
+# ElastiCache Module
+module "cache" {
+  source = "../../modules/cache"
+
+  project     = var.project
+  environment = var.environment
+
+  cache_subnets       = module.network.cache_subnets
+  cache_security_group = module.network.cache_security_group
+
+  cache_node_type     = var.cache_node_type
+  cache_nodes         = var.cache_nodes
 }

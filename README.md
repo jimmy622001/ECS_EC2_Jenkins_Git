@@ -1,12 +1,13 @@
-# ECS with Jenkins CI/CD and Monitoring Infrastructure
+# AWS ECS Infrastructure with Jenkins CI/CD, RDS, ElastiCache, and Monitoring
 
 ## Overview
 
 This Terraform project deploys a complete AWS infrastructure including:
-- VPC with public/private subnets and dedicated database subnet
+- VPC with public/private subnets, dedicated database subnets, and ElastiCache subnets
 - ECS Cluster using EC2 instances with blue/green deployment capability
 - CI/CD pipeline with Jenkins and GitHub integration on self-healing EC2 instances
-- RDS database in a private subnet
+- RDS database in dedicated private subnets for enhanced security
+- ElastiCache Redis cluster in dedicated subnets across multiple AZs
 - Prometheus and Grafana monitoring solution
 - Automated patching and AMI management
 
@@ -50,9 +51,9 @@ The infrastructure is organized into the following modules:
 ### 4. Database Module
 - **Purpose**: Provides persistent storage
 - **Components**:
-    - RDS instance in private subnet
+    - RDS instance in dedicated private subnets
     - Encrypted storage with backups
-    - High availability configuration
+    - High availability configuration across multiple Availability Zones
 
 ### 5. CI/CD Module
 - **Purpose**: Enables continuous integration/deployment
@@ -75,6 +76,14 @@ The infrastructure is organized into the following modules:
     - WAF configuration with OWASP rules
     - Security headers and TLS configuration
     - GuardDuty and AWS Config integration
+
+### 8. Cache Module
+- **Purpose**: Provides high-performance caching
+- **Components**:
+    - ElastiCache Redis cluster in dedicated private subnets
+    - Multi-AZ deployment across three Availability Zones
+    - Automated failover capabilities
+    - Encrypted connections and data-at-rest
 
 ## Layered Infrastructure Approach
 
@@ -112,13 +121,14 @@ The project supports multiple environments with specialized configurations:
 - Isolated VPC with enterprise-grade security controls
 
 ### DR Pilot Light Environment
-- Minimal running infrastructure in a secondary AWS region
+- Minimal running infrastructure in EU-West-1 region for faster recovery
 - Uses spot instances for cost efficiency during normal operations
 - Auto scaling capabilities to rapidly expand during failover events
+- Consistent subnet and security configuration with production environment
 
 ## Secrets Management
 
-This project uses AWS Secrets Manager for handling sensitive information:
+This project uses AWS Secrets Manager for handling sensitive information, including database and ElastiCache credentials:
 
 1. No sensitive data is stored in the Terraform code
 2. All secrets are referenced from AWS Secrets Manager
@@ -142,7 +152,18 @@ For more detailed documentation, see:
 - [Migration Guide](docs/MIGRATION_GUIDE.md)
 - [Usage Instructions](USAGE.md)
 
-Architecture diagram:
-Primary: ![Primary.png](docs/Primary.png)
-Dr: ![DR.png](docs/DR.png)
+## Architecture Diagrams
+
+### Primary Infrastructure (eu-west-2)
+![Primary Infrastructure](docs/Primary.png)
+
+### DR Pilot Light Infrastructure (eu-west-1)
+![DR Infrastructure](docs/DR.png)
+
+## Recent Updates
+
+- Added dedicated ElastiCache subnets across all environments
+- Enhanced redundancy with three-AZ deployments for critical services
+- Relocated DR environment to eu-west-1 for improved recovery times
+- Implemented consistent CIDR block strategy across all environments
 

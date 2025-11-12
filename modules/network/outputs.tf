@@ -45,10 +45,7 @@ output "jenkins_security_group" {
   value       = aws_security_group.jenkins.id
 }
 
-# ElastiCache outputs - Commented out until ElastiCache is needed
-# Uncomment when enabling ElastiCache resources
-
-/*
+# ElastiCache outputs
 output "cache_subnets" {
   description = "List of ElastiCache subnet IDs"
   value       = aws_subnet.cache[*].id
@@ -58,14 +55,3 @@ output "cache_security_group" {
   description = "ID of ElastiCache security group"
   value       = aws_security_group.cache.id
 }
-*/
-
-# ElastiCache security group output - commented out until ElastiCache is enabled
-# Uncomment when enabling ElastiCache resources
-
-/*
-output "cache_security_group" {
-  description = "ID of ElastiCache security group"
-  value       = aws_security_group.cache.id
-}
-*/
