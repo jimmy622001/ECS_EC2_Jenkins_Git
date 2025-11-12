@@ -1,5 +1,15 @@
 # ECS Module - Main Configuration
 
+terraform {
+  required_providers {
+    aws = {
+      source = "hashicorp/aws"
+      version = ">= 5.0"
+    }
+  }
+}
+
+
 # ECS Cluster
 resource "aws_ecs_cluster" "main" {
   name = "${var.project}-${var.environment}-cluster"
@@ -130,7 +140,8 @@ resource "aws_ecs_cluster_capacity_providers" "main" {
 
 # Application Load Balancer
 resource "aws_lb" "main" {
-  name               = "${var.project}-${var.environment}-alb"
+  # Shorten name to stay within 32 character limit
+  name               = "${substr(var.project,0,10)}-${var.environment}-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [var.alb_security_group]
@@ -148,7 +159,8 @@ resource "aws_lb" "main" {
 
 # ALB Target Group
 resource "aws_lb_target_group" "app" {
-  name                 = "${var.project}-${var.environment}-tg"
+  # Shorten name to stay within 32 character limit
+  name                 = "${substr(var.project,0,10)}-${var.environment}-tg"
   port                 = 80
   protocol             = "HTTP"
   vpc_id               = var.vpc_id

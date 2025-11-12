@@ -14,6 +14,11 @@ variable "aws_region" {
   type        = string
 }
 
+variable "primary_aws_region" {
+  description = "AWS region of the primary deployment"
+  type        = string
+}
+
 # Network variables
 variable "vpc_cidr" {
   description = "CIDR block for VPC"
@@ -200,4 +205,135 @@ variable "cache_nodes" {
 variable "cache_security_group" {
   description = "Existing ElastiCache security group ID (when deploy_network = false)"
   type        = string
+}
+
+# DR Failover Variables
+variable "domain_name" {
+  description = "Domain name for the application"
+  type        = string
+}
+
+variable "primary_alb_dns_name" {
+  description = "DNS name of the primary region ALB"
+  type        = string
+}
+
+variable "primary_alb_zone_id" {
+  description = "Route 53 zone ID for the primary ALB"
+  type        = string
+}
+
+variable "route53_hosted_zone_id" {
+  description = "ID of an existing Route53 hosted zone"
+  type        = string
+  default     = ""
+}
+
+variable "create_route53_zone" {
+  description = "Whether to create a new Route53 hosted zone"
+  type        = bool
+  default     = false
+}
+
+variable "health_check_path" {
+  description = "Path for health check"
+  type        = string
+  default     = "/health"
+}
+
+variable "health_check_matcher" {
+  description = "Response code matcher for health check"
+  type        = string
+  default     = "200-299"
+}
+
+variable "primary_db_instance_id" {
+  description = "ID of the database instance in the primary region"
+  type        = string
+}
+
+# Pilot Light Configuration
+variable "pilot_min_capacity" {
+  description = "Minimum capacity for pilot light environment"
+  type        = number
+  default     = 1
+}
+
+variable "pilot_max_capacity" {
+  description = "Maximum capacity for pilot light environment"
+  type        = number
+  default     = 2
+}
+
+variable "pilot_desired_capacity" {
+  description = "Desired capacity for pilot light environment"
+  type        = number
+  default     = 1
+}
+
+# Failover Configuration
+variable "failover_min_capacity" {
+  description = "Minimum capacity for DR environment during failover"
+  type        = number
+  default     = 3
+}
+
+variable "failover_max_capacity" {
+  description = "Maximum capacity for DR environment during failover"
+  type        = number
+  default     = 10
+}
+
+variable "failover_desired_capacity" {
+  description = "Desired capacity for DR environment during failover"
+  type        = number
+  default     = 3
+}
+
+# ECS Configuration
+variable "ecs_instance_types" {
+  description = "List of EC2 instance types for ECS"
+  type        = list(string)
+  default     = ["t3.medium", "t3a.medium"]
+}
+
+variable "ssh_key_name" {
+  description = "SSH key name for EC2 instances"
+  type        = string
+  default     = ""
+}
+
+variable "use_spot_instances" {
+  description = "Whether to use spot instances for ECS"
+  type        = bool
+  default     = true
+}
+
+variable "container_name" {
+  description = "Name of the container"
+  type        = string
+  default     = "app"
+}
+
+variable "container_port" {
+  description = "Port exposed by the container"
+  type        = number
+  default     = 80
+}
+
+variable "container_image" {
+  description = "Docker image for the container"
+  type        = string
+}
+
+variable "container_cpu" {
+  description = "CPU units for the container"
+  type        = number
+  default     = 256
+}
+
+variable "container_memory" {
+  description = "Memory for the container in MiB"
+  type        = number
+  default     = 512
 }
