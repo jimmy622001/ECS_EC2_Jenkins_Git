@@ -63,6 +63,25 @@ resource "aws_subnet" "database" {
   }
 }
 
+# ElastiCache Subnets - Commented out until ElastiCache is needed
+# Uncomment when enabling ElastiCache resources
+/*
+resource "aws_subnet" "cache" {
+  count             = length(var.cache_subnet_cidrs)
+  vpc_id            = aws_vpc.main.id
+  cidr_block        = var.cache_subnet_cidrs[count.index]
+  availability_zone = var.availability_zones[count.index % length(var.availability_zones)]
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-cache-subnet-${count.index + 1}"
+    Environment = var.environment
+    Project     = var.project
+    Terraform   = "true"
+    Type        = "Cache"
+  }
+}
+*/
+
 # Internet Gateway
 resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
@@ -155,6 +174,27 @@ resource "aws_route_table" "database" {
   }
 }
 
+# Route Table for ElastiCache subnets - Commented out until ElastiCache is needed
+# Uncomment when enabling ElastiCache resources
+/*
+resource "aws_route_table" "cache" {
+  count  = length(var.cache_subnet_cidrs)
+  vpc_id = aws_vpc.main.id
+
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.main[count.index % length(aws_nat_gateway.main)].id
+  }
+
+  tags = {
+    Name        = "${var.project}-${var.environment}-cache-rt-${count.index + 1}"
+    Environment = var.environment
+    Project     = var.project
+    Terraform   = "true"
+  }
+}
+*/
+
 # Route Table Associations
 resource "aws_route_table_association" "public" {
   count          = length(var.public_subnet_cidrs)
@@ -173,6 +213,16 @@ resource "aws_route_table_association" "database" {
   subnet_id      = aws_subnet.database[count.index].id
   route_table_id = aws_route_table.database[count.index % length(aws_route_table.database)].id
 }
+
+# Route Table Association for ElastiCache subnets - Commented out until ElastiCache is needed
+# Uncomment when enabling ElastiCache resources
+/*
+resource "aws_route_table_association" "cache" {
+  count          = length(var.cache_subnet_cidrs)
+  subnet_id      = aws_subnet.cache[count.index].id
+  route_table_id = aws_route_table.cache[count.index % length(aws_route_table.cache)].id
+}
+*/
 
 # Security Groups
 resource "aws_security_group" "alb" {

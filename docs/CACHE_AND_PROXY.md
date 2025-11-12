@@ -85,23 +85,59 @@ terraform apply -target=module.database
 
 ## How to Enable ElastiCache
 
-1. Edit the `modules/network/main.tf` file and uncomment the ElastiCache security group:
+1. First, enable the dedicated ElastiCache subnets in the network module:
 
-```hcl
-resource "aws_security_group" "cache" {
-  name        = "${var.project}-${var.environment}-cache-sg"
-  # ...
-}
-```
+   Edit the `environments/dev/variables.tf` file and uncomment the cache subnet CIDR variable:
 
-2. Edit the `modules/network/outputs.tf` file and uncomment the cache_security_group output:
+   ```hcl
+   variable "cache_subnet_cidrs" {
+     description = "CIDR blocks for ElastiCache subnets"
+     type        = list(string)
+     default     = ["10.0.16.0/24", "10.0.17.0/24"] # Adjust these CIDR blocks as needed
+   }
+   ```
 
-```hcl
-output "cache_security_group" {
-  description = "ID of ElastiCache security group"
-  value       = aws_security_group.cache.id
-}
-```
+2. Edit the `modules/network/main.tf` file and uncomment the ElastiCache subnets, route tables, associations, and security group:
+
+   ```hcl
+   # ElastiCache Subnets
+   resource "aws_subnet" "cache" {
+     count             = length(var.cache_subnet_cidrs)
+     # ...
+   }
+
+   # Route tables for cache subnets
+   resource "aws_route_table" "cache" {
+     count  = length(var.cache_subnet_cidrs)
+     # ...
+   }
+
+   # Route table associations for cache subnets
+   resource "aws_route_table_association" "cache" {
+     count          = length(var.cache_subnet_cidrs)
+     # ...
+   }
+
+   # ElastiCache Security Group
+   resource "aws_security_group" "cache" {
+     name        = "${var.project}-${var.environment}-cache-sg"
+     # ...
+   }
+   ```
+
+3. Edit the `modules/network/outputs.tf` file and uncomment the cache subnet and security group outputs:
+
+   ```hcl
+   output "cache_subnets" {
+     description = "List of ElastiCache subnet IDs"
+     value       = aws_subnet.cache[*].id
+   }
+
+   output "cache_security_group" {
+     description = "ID of ElastiCache security group"
+     value       = aws_security_group.cache.id
+   }
+   ```
 
 3. Uncomment the ElastiCache module in `environments/dev/main.tf`:
 

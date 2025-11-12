@@ -5,7 +5,7 @@
 /* 
 resource "aws_elasticache_subnet_group" "main" {
   name       = "${var.project}-${var.environment}-cache-subnet-group"
-  subnet_ids = var.private_subnets
+  subnet_ids = var.cache_subnets
 }
 
 resource "aws_elasticache_cluster" "redis" {

@@ -8,8 +8,8 @@ variable "environment" {
   type        = string
 }
 
-variable "private_subnets" {
-  description = "List of private subnet IDs"
+variable "cache_subnets" {
+  description = "List of ElastiCache subnet IDs"
   type        = list(string)
 }
 

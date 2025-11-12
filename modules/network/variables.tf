@@ -42,3 +42,10 @@ variable "allowed_ssh_cidr" {
   description = "CIDR block allowed for SSH access"
   type        = string
 }
+
+# ElastiCache subnet variables - commented out until ElastiCache is needed
+variable "cache_subnet_cidrs" {
+  description = "CIDR blocks for ElastiCache subnets"
+  type        = list(string)
+  default     = []
+}
