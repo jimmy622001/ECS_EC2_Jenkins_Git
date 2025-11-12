@@ -13,6 +13,8 @@ module "network" {
   database_subnet_cidrs = var.database_subnet_cidrs
   availability_zones    = var.availability_zones
   allowed_ssh_cidr      = var.allowed_ssh_cidr
+  # Uncomment the line below when enabling ElastiCache
+  # cache_subnet_cidrs    = var.cache_subnet_cidrs
 }
 
 # IAM Module
@@ -171,7 +173,7 @@ module "cache" {
   project     = var.project
   environment = var.environment
 
-  private_subnets     = module.network.private_subnets
+  cache_subnets       = module.network.cache_subnets
   cache_security_group = module.network.cache_security_group
 
   # Configure these in variables.tf
