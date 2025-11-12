@@ -404,20 +404,22 @@ variable "db_instance_id" {
 }
 
 # ElastiCache variables
+variable "enable_elasticache" {
+  description = "Enable ElastiCache deployment"
+  type        = bool
+}
+
 variable "cache_node_type" {
   description = "ElastiCache node type"
   type        = string
-  default     = "cache.m5.large" # Production should use larger instances
 }
 
 variable "cache_nodes" {
   description = "Number of Redis cache nodes"
   type        = number
-  default     = 3 # Using 3 nodes for high availability across 3 AZs
 }
 
 variable "cache_security_group" {
   description = "Existing ElastiCache security group ID (when deploy_network = false)"
   type        = string
-  default     = ""
 }
