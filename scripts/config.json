@@ -1,0 +1,21 @@
+{
+  "aws_profile": "default",
+  "regions": {
+    "dev": "us-east-1",
+    "prod": "us-east-1"
+  },
+  "health_check_paths": {
+    "dev": "/health",
+    "prod": "/health"
+  },
+  "expected_services": {
+    "dev": ["ecs", "elasticache", "alb"],
+    "prod": ["ecs", "elasticache", "alb"]
+  },
+  "load_test": {
+    "concurrent_users": 10,
+    "duration_seconds": 30,
+    "requests_per_second": 5
+  },
+  "report_output_dir": "runbook_reports"
+}
