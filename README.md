@@ -170,6 +170,7 @@ For more detailed documentation, see:
 - [Modular Deployment Guide](docs/MODULAR_DEPLOYMENT.md)
 - [Layered Infrastructure Guide](docs/LAYERED_INFRASTRUCTURE.md)
 - [Migration Guide](docs/MIGRATION_GUIDE.md)
+- [Resilience Testing Playbook](docs/RESILIENCE_TESTING_PLAYBOOK.md)
 - [Usage Instructions](USAGE.md)
 
 ## Architecture Diagrams
