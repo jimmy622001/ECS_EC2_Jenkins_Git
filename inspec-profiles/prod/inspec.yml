@@ -1,0 +1,13 @@
+name: aws-ecs-prod-compliance
+title: AWS ECS on EC2 Production Environment Compliance
+maintainer: DevOps Team
+copyright: Your Organization
+copyright_email: devops@example.com
+license: Apache-2.0
+summary: Compliance tests for AWS ECS on EC2 Production environment
+version: 0.1.0
+supports:
+  - platform: aws
+depends:
+  - name: inspec-aws
+    url: https://github.com/inspec/inspec-aws/archive/main.tar.gz

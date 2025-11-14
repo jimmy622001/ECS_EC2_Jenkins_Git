@@ -43,6 +43,13 @@ pipeline {
                 checkout scm
                 sh 'git log -1 --pretty=format:"%h - %an: %s" > commit.txt'
                 sh 'cat commit.txt'
+                
+                // Create InSpec profiles directory structure
+                sh '''
+                    mkdir -p inspec-profiles/dev/controls
+                    mkdir -p inspec-profiles/prod/controls
+                    mkdir -p inspec-profiles/dr-pilot-light/controls
+                '''
             }
         }
         
@@ -473,6 +480,84 @@ pipeline {
                 }
             }
         }
+        
+        stage('Compliance Testing') {
+            when {
+                expression { params.DEPLOY == true }
+            }
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: env.AWS_CREDENTIALS,
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]) {
+                    sh 'echo "Running InSpec compliance tests against ${params.ENVIRONMENT} environment in ${AWS_REGION}"'
+                    
+                    // Install InSpec if not available
+                    sh '''
+                        if ! command -v inspec &> /dev/null; then
+                            echo "Installing InSpec..."
+                            curl https://omnitruck.chef.io/install.sh | sudo bash -s -- -P inspec
+                        fi
+                        
+                        # Ensure InSpec AWS plugin is available
+                        inspec plugin install inspec-aws || true
+                    '''
+                    
+                    // Run InSpec with AWS profile
+                    sh '''
+                        # Determine which profile to run and which region to target based on environment
+                        INSPEC_PROFILE="inspec-profiles/${ENVIRONMENT}"
+                        
+                        # Determine the AWS region to target based on environment
+                        if [ "${ENVIRONMENT}" == "dr-pilot-light" ]; then
+                            TARGET_REGION="us-west-2"
+                        elif [ "${ENVIRONMENT}" == "prod" ]; then
+                            TARGET_REGION="eu-west-2"
+                        else
+                            TARGET_REGION="eu-west-2"
+                        fi
+                        
+                        # Extract VPC ID from Terraform outputs
+                        cd environments/${ENVIRONMENT}
+                        VPC_ID=$(terraform output -json | jq -r '.vpc_id.value')
+                        
+                        # Create a custom inputs file for InSpec to use
+                        mkdir -p ../../${INSPEC_PROFILE}/files
+                        cat > ../../${INSPEC_PROFILE}/files/inputs.yml << EOF
+                        vpc_id: ${VPC_ID}
+                        environment: ${ENVIRONMENT}
+                        project: ${PROJECT_NAME}
+                        EOF
+                        
+                        cd ../../
+                        
+                        # Run InSpec tests
+                        mkdir -p compliance-reports
+                        inspec exec ${INSPEC_PROFILE} \\
+                            -t aws://${TARGET_REGION} \\
+                            --input-file ${INSPEC_PROFILE}/files/inputs.yml \\
+                            --reporter cli junit:compliance-reports/inspec-${ENVIRONMENT}.xml html:compliance-reports/inspec-${ENVIRONMENT}.html
+                    '''
+                }
+            }
+            post {
+                always {
+                    junit allowEmptyResults: true, testResults: 'compliance-reports/*.xml'
+                    publishHTML([
+                        allowMissing: true,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: 'compliance-reports',
+                        reportFiles: 'inspec-*.html',
+                        reportName: 'InSpec Compliance Report',
+                        reportTitles: ''
+                    ])
+                    archiveArtifacts artifacts: 'compliance-reports/**', allowEmptyArchive: true
+                }
+            }
+        }
     }
     
     post {
@@ -483,6 +568,10 @@ pipeline {
             // Archive security reports
             archiveArtifacts artifacts: 'security-reports/**', allowEmptyArchive: true
             junit allowEmptyResults: true, testResults: 'security-reports/**/*.xml'
+            
+            // Archive compliance reports
+            archiveArtifacts artifacts: 'compliance-reports/**', allowEmptyArchive: true
+            junit allowEmptyResults: true, testResults: 'compliance-reports/**/*.xml'
     
             // Clean up workspace
             cleanWs()
