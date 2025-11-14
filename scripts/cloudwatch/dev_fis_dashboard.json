@@ -1,0 +1,133 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ECS", "CPUUtilization", "ClusterName", "project-dev-cluster", "ServiceName", "project-dev-service", { "stat": "Average" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "ECS CPU Utilization During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false,
+        "annotations": {
+          "vertical": [
+            {
+              "label": "FIS Experiment Started",
+              "value": "#{ExperimentStartTime}",
+              "color": "#2ca02c"
+            },
+            {
+              "label": "FIS Experiment Ended",
+              "value": "#{ExperimentEndTime}",
+              "color": "#d62728"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ECS", "MemoryUtilization", "ClusterName", "project-dev-cluster", "ServiceName", "project-dev-service", { "stat": "Average" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "ECS Memory Utilization During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "ECS/ContainerInsights", "RunningTaskCount", "ClusterName", "project-dev-cluster", "ServiceName", "project-dev-service", { "stat": "Average" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "ECS Running Task Count During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 6,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "project-dev-alb", { "stat": "Average" } ],
+          [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "project-dev-alb", { "stat": "Sum" } ],
+          [ "AWS/ApplicationELB", "HTTPCode_Target_4XX_Count", "LoadBalancer", "project-dev-alb", { "stat": "Sum" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "ALB Response Time and Error Codes During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/AutoScaling", "GroupInServiceInstances", "AutoScalingGroupName", "project-dev-ecs-asg", { "stat": "Average" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "ASG In-Service Instances During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 12,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "metrics": [
+          [ "AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "project-dev-ecs-asg", { "stat": "Average" } ],
+          [ "AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "project-dev-ecs-asg", { "stat": "Maximum" } ]
+        ],
+        "period": 60,
+        "region": "us-east-1",
+        "title": "EC2 CPU Utilization During FIS Experiment",
+        "view": "timeSeries",
+        "stacked": false
+      }
+    },
+    {
+      "type": "text",
+      "x": 0,
+      "y": 18,
+      "width": 24,
+      "height": 3,
+      "properties": {
+        "markdown": "# AWS FIS Experiment Dashboard - Dev Environment\nThis dashboard shows the impact of AWS Fault Injection Simulator experiments on the development environment. Use this to validate the resilience of your application and infrastructure.\n\n**Latest Experiment:** #{ExperimentID} | **Template:** #{TemplateID} | **Status:** #{ExperimentStatus}"
+      }
+    }
+  ]
+}

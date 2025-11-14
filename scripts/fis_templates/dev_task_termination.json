@@ -1,0 +1,36 @@
+{
+    "description": "Terminate ECS tasks in dev environment",
+    "targets": {
+        "ecs-tasks": {
+            "resourceType": "aws:ecs:task",
+            "resourceArns": ["${ECS_TASK_ARN}"],
+            "selectionMode": "COUNT(1)",
+            "parameters": {
+                "cluster": "${ECS_CLUSTER_NAME}",
+                "service": "${ECS_SERVICE_NAME}"
+            }
+        }
+    },
+    "actions": {
+        "terminate-tasks": {
+            "actionId": "aws:ecs:stop-task",
+            "parameters": {
+                "reason": "FIS experiment"
+            },
+            "targets": {
+                "tasks": "ecs-tasks"
+            }
+        }
+    },
+    "stopConditions": [
+        {
+            "source": "aws:cloudwatch:alarm",
+            "value": "${TASK_COUNT_ALARM_ARN}"
+        }
+    ],
+    "roleArn": "${FIS_ROLE_ARN}",
+    "tags": {
+        "Name": "dev-task-termination-test",
+        "Environment": "dev"
+    }
+}

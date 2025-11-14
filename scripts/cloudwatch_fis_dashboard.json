@@ -1,0 +1,281 @@
+{
+    "widgets": [
+        {
+            "type": "text",
+            "x": 0,
+            "y": 0,
+            "width": 24,
+            "height": 1,
+            "properties": {
+                "markdown": "# AWS Fault Injection Simulator (FIS) Experiment Dashboard\nThis dashboard provides monitoring for FIS experiments across your infrastructure components"
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 1,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ECS", "CPUUtilization", "ClusterName", "${ClusterName}", { "stat": "Average", "period": 60 } ],
+                    [ "AWS/EC2", "CPUUtilization", "AutoScalingGroupName", "${ASGName}", { "stat": "Average", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "CPU Utilization",
+                "period": 300,
+                "stat": "Average",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "value": 80,
+                            "label": "CPU Threshold",
+                            "color": "#ff9896"
+                        }
+                    ],
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 1,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ECS", "MemoryUtilization", "ClusterName", "${ClusterName}", { "stat": "Average", "period": 60 } ],
+                    [ "AWS/EC2", "MemoryUtilization", "AutoScalingGroupName", "${ASGName}", { "stat": "Average", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Memory Utilization",
+                "period": 300,
+                "stat": "Average",
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "value": 80,
+                            "label": "Mem Threshold",
+                            "color": "#ff9896"
+                        }
+                    ],
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 7,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_2XX_Count", "LoadBalancer", "${LoadBalancerName}" ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_4XX_Count", "LoadBalancer", "${LoadBalancerName}" ],
+                    [ "AWS/ApplicationELB", "HTTPCode_Target_5XX_Count", "LoadBalancer", "${LoadBalancerName}" ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "HTTP Response Codes",
+                "period": 60,
+                "stat": "Sum",
+                "annotations": {
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 7,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${LoadBalancerName}", { "stat": "Average", "period": 60 } ],
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${LoadBalancerName}", { "stat": "p90", "period": 60 } ],
+                    [ "AWS/ApplicationELB", "TargetResponseTime", "LoadBalancer", "${LoadBalancerName}", { "stat": "p99", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Response Times",
+                "period": 60,
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "value": 1,
+                            "label": "1 sec threshold",
+                            "color": "#ff9896"
+                        }
+                    ],
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 13,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/RDS", "CPUUtilization", "DBInstanceIdentifier", "${DBInstanceName}", { "stat": "Average", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Database CPU Utilization",
+                "period": 300,
+                "annotations": {
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 13,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/RDS", "DatabaseConnections", "DBInstanceIdentifier", "${DBInstanceName}", { "stat": "Average", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "Database Connections",
+                "period": 300,
+                "annotations": {
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 19,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "metrics": [
+                    [ "AWS/ECS", "RunningTaskCount", "ClusterName", "${ClusterName}", "ServiceName", "${ServiceName}", { "stat": "Average", "period": 60 } ]
+                ],
+                "view": "timeSeries",
+                "stacked": false,
+                "region": "${AWS::Region}",
+                "title": "ECS Running Tasks",
+                "period": 60,
+                "annotations": {
+                    "horizontal": [
+                        {
+                            "value": "${DesiredTaskCount}",
+                            "label": "Desired Count",
+                            "color": "#1f77b4"
+                        }
+                    ],
+                    "vertical": [
+                        {
+                            "value": "${ExperimentStartTime}",
+                            "label": "FIS Start",
+                            "color": "#17becf"
+                        },
+                        {
+                            "value": "${ExperimentEndTime}",
+                            "label": "FIS End",
+                            "color": "#17becf" 
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "log",
+            "x": 0,
+            "y": 25,
+            "width": 24,
+            "height": 6,
+            "properties": {
+                "query": "SOURCE '/aws/fis/experiment' | filter experimentId = '${ExperimentId}' | sort @timestamp desc | limit 100",
+                "region": "${AWS::Region}",
+                "title": "FIS Experiment Logs",
+                "view": "table"
+            }
+        }
+    ]
+}
