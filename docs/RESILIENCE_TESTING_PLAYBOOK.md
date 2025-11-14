@@ -285,9 +285,48 @@ Expected Results: All logs should be collected with minimal delay even under hig
 
 ## 7. Performance Under Stress
 
-### 7.1. Chaos Testing
+### 7.1. Chaos Testing with AWS FIS
 
-#### 7.1.1. Test: Random Service Disruption
+#### 7.1.1. Test: AWS FIS - Random Service Disruption
+```
+Description: Use AWS Fault Injection Simulator to introduce random failures
+Approach:
+1. Create an FIS experiment template targeting ECS tasks
+2. Configure appropriate stop conditions via CloudWatch alarms
+3. Run the experiment using the run_fis_experiment.sh script
+4. Monitor system availability and recovery via FIS dashboard
+5. Document unexpected behaviors and generate FIS report using the template
+Expected Results: System should maintain overall availability despite individual component failures
+Reference: See docs/AWS_FIS_PLAYBOOK.md for detailed implementation
+```
+
+#### 7.1.2. Test: AWS FIS - EC2 CPU Stress
+```
+Description: Use AWS FIS to stress CPU on EC2 instances
+Approach:
+1. Use the provided ec2_cpu_stress.json template
+2. Target instances in specific environments
+3. Apply CPU stress for 5 minutes
+4. Monitor application performance during stress
+5. Verify autoscaling responds correctly to increased CPU load
+Expected Results: Services remain available, possibly with some degradation, and autoscaling responds appropriately
+Reference: See scripts/fis_templates/ec2_cpu_stress.json for implementation
+```
+
+#### 7.1.3. Test: AWS FIS - Network Latency Injection
+```
+Description: Use AWS FIS to inject network latency between components
+Approach:
+1. Create an FIS experiment template that adds 200ms latency
+2. Target a percentage of instances in the cluster
+3. Run experiment during moderate load
+4. Monitor application timeouts and retry mechanisms
+5. Verify resilience patterns handle network degradation
+Expected Results: Application should gracefully handle increased network latency with minimal user impact
+Reference: See docs/AWS_FIS_PLAYBOOK.md for implementation details
+```
+
+#### 7.1.4. Test: Legacy Random Service Disruption
 ```
 Description: Introduce random failures to test overall system resilience
 Approach:
@@ -300,7 +339,27 @@ Expected Results: System should maintain overall availability despite individual
 
 ### 7.2. Load Testing Under Degraded Conditions
 
-#### 7.2.1. Test: Scaling Under Network Constraints
+#### 7.2.1. Test: AWS FIS - Database Failover Under Load
+```
+Description: Test database failover resilience under load using AWS FIS
+Approach:
+1. Generate moderate database load using a load testing tool
+2. Execute AWS FIS experiment to force RDS failover
+3. Monitor application errors and recovery during failover
+4. Measure recovery time and data consistency
+Expected Results: Database should fail over with minimal application disruption and no data loss
+Reference: See docs/AWS_FIS_PLAYBOOK.md for RDS failover experiment details
+```
+
+#### 7.2.2. Test: Scaling Under Network Constraints
+```
+Description: Test autoscaling under simulated network degradation
+Approach:
+1. Introduce network latency between components (using tc or similar tools)
+2. Generate increasing load on the application
+3. Monitor scaling behavior and application performance
+4. Observe any failures in the distributed system
+Expected Results: System should scale successfully despite network constraints
 ```
 Description: Test autoscaling under simulated network degradation
 Approach:
@@ -338,25 +397,46 @@ Expected Results: System should scale successfully despite network constraints
 ### 9.1. Weekly Tests
 - Single component failure tests (ECS task, cache node)
 - Basic alerting verification
+- AWS FIS simple experiments (EC2 stress, ECS task failure)
 
 ### 9.2. Monthly Tests
 - Multi-component failure scenarios
-- Database failover tests
+- Database failover tests using AWS FIS
+- Network disruption experiments with AWS FIS
 - Automated DR tests (already configured)
 
 ### 9.3. Quarterly Tests
 - Full regional failover test
-- Complete application stack resilience test
+- Complete application stack resilience test with AWS FIS
+- Complex multi-service AWS FIS experiments
 - Security controls verification
 
-## 10. Playbook Maintenance
+## 10. AWS FIS Implementation
 
-### 10.1. Update Frequency
+This playbook now incorporates AWS Fault Injection Simulator (FIS) for automated chaos engineering experiments.
+
+### 10.1. AWS FIS Resources
+- See [AWS FIS Playbook](./AWS_FIS_PLAYBOOK.md) for detailed implementation
+- Scripts location: `scripts/aws_fis_setup.sh`, `scripts/run_fis_experiment.sh`
+- Templates: `scripts/fis_templates/`
+- Reporting template: `docs/templates/fis_experiment_report_template.md`
+
+### 10.2. AWS FIS Testing Program
+- Start with development environment experiments
+- Progress to production-safe experiments
+- Document all experiments using the provided templates
+- Iterate and improve based on findings
+
+## 11. Playbook Maintenance
+
+### 11.1. Update Frequency
 - Review and update playbook quarterly
 - Align with infrastructure changes
 - Incorporate lessons from prior tests
+- Update AWS FIS templates based on evolving infrastructure
 
-### 10.2. Validation Process
+### 11.2. Validation Process
 - Validate all tests after major infrastructure changes
 - Peer review test procedures before execution
 - Document test effectiveness metrics
+- Review AWS FIS experiment permissions and stop conditions regularly

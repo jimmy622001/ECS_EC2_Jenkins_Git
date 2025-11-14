@@ -1,0 +1,35 @@
+{
+    "description": "Stress CPU on EC2 instances in dev environment",
+    "targets": {
+        "ec2-instances": {
+            "resourceType": "aws:ec2:instance",
+            "resourceTags": {
+                "Environment": "dev"
+            },
+            "selectionMode": "COUNT(1)"
+        }
+    },
+    "actions": {
+        "stress-cpu": {
+            "actionId": "aws:ssm:send-command",
+            "parameters": {
+                "documentArn": "arn:aws:ssm:us-east-1::document/AWSFIS-Run-CPU-Stress",
+                "documentParameters": "{\"DurationSeconds\":\"300\", \"CPU\":\"0\"}"
+            },
+            "targets": {
+                "Instances": "ec2-instances"
+            }
+        }
+    },
+    "stopConditions": [
+        {
+            "source": "aws:cloudwatch:alarm",
+            "value": "${CPU_ALARM_ARN}"
+        }
+    ],
+    "roleArn": "${FIS_ROLE_ARN}",
+    "tags": {
+        "Name": "dev-cpu-stress-test",
+        "Environment": "dev"
+    }
+}
