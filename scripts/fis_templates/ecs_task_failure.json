@@ -1,0 +1,40 @@
+{
+  "description": "ECS Task Failure Experiment",
+  "targets": {
+    "ecs-tasks": {
+      "resourceType": "aws:ecs:task",
+      "filters": [
+        {
+          "path": "State.Name",
+          "values": ["RUNNING"]
+        }
+      ],
+      "resourceTags": {
+        "Environment": "dev"
+      },
+      "selectionMode": "COUNT(2)"
+    }
+  },
+  "actions": {
+    "terminate-tasks": {
+      "actionId": "aws:ecs:stop-task",
+      "parameters": {
+        "reason": "FIS experiment: Testing ECS service recovery"
+      },
+      "targets": {
+        "Tasks": "ecs-tasks"
+      }
+    }
+  },
+  "stopConditions": [
+    {
+      "source": "none"
+    }
+  ],
+  "roleArn": "arn:aws:iam::ACCOUNT_ID:role/FISExecutionRole",
+  "tags": {
+    "Name": "ECS-Task-Failure-Experiment",
+    "Environment": "dev",
+    "Service": "ecs-application"
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "description": "EC2 CPU Stress Test Experiment",
+  "targets": {
+    "ec2-instances": {
+      "resourceType": "aws:ec2:instance",
+      "resourceTags": {
+        "Environment": "dev",
+        "Service": "ecs-cluster"
+      },
+      "selectionMode": "COUNT(1)"
+    }
+  },
+  "actions": {
+    "stress-cpu": {
+      "actionId": "aws:ssm:send-command",
+      "parameters": {
+        "documentArn": "arn:aws:ssm:REGION::document/AWSFIS-Run-CPU-Stress",
+        "documentParameters": "{\"DurationSeconds\":\"300\", \"CPU\":\"0\"}"
+      },
+      "targets": {
+        "Instances": "ec2-instances"
+      }
+    }
+  },
+  "stopConditions": [
+    {
+      "source": "aws:cloudwatch:alarm",
+      "value": "arn:aws:cloudwatch:REGION:ACCOUNT_ID:alarm:CPUStressTestAlarm"
+    }
+  ],
+  "roleArn": "arn:aws:iam::ACCOUNT_ID:role/FISExecutionRole",
+  "tags": {
+    "Name": "EC2-CPU-Stress-Experiment",
+    "Environment": "dev",
+    "Service": "ecs-cluster"
+  }
+}
